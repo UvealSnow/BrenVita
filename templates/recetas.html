@@ -1,0 +1,30 @@
+<h1>Recetas</h1>
+<a ui-sref="new.recipes" ng-if="token">+ Receta</a>
+<div ng-if="!data.ingredients" ng-repeat="r in data">
+	<a ng-href="#/recetas/{{r.id}}"><h1>{{r.name}}</h1></a>
+	<a ng-href="#/authors/{{r.auth_id}}"><h4>{{r.auth}}</h4></a>
+	<p>{{r.text}}</p>
+	<img ng-src="img/recetas/{{r.img}}" title="{{r.img_desc}}" alt="{{r.img_desc}}">
+	<div ng-controller="navCtrl" ng-if="token">
+		<a ui-sref="edit.recipe({id: r.id})">Modificar</a>
+		<a href ng-click="delete(r.id)">Borrar</a>
+	</div>
+</div>
+
+<div ng-if="data.ingredients">
+	<h1>{{data.name}}</h1>
+	<a ng-href="#/authors/{{data.auth_id}}"><h4>{{data.auth_name}}</h4></a>
+	<p ng-if="data.video">{{data.video}}</p>
+	<h4 ng-if="data.ingredients">Ingredientes:</h4>
+	<ul ng-if="data.ingredients" ng-repeat="i in data.ingredients">
+		<li>{{i.qnt}} {{i.unit}} de {{i.name}} (cals: {{i.cals*i.qnt}})</li>
+	</ul>
+	<h4 ng-if="data.pasos">Pasos:</h4>
+	<ul ng-if="data.pasos" ng-repeat="p in data.pasos">
+		<li>{{p}}</li>
+	</ul>
+	<div ng-if="token">
+		<a ui-sref="edit.recipe({id: data.id})">Modificar</a>
+		<a href ng-click="delete.recipe({id: data.id})">Borrar</a>
+	</div>
+<div>

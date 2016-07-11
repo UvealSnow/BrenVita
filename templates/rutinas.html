@@ -1,0 +1,32 @@
+<h1>Rutinas</h1>
+<a ui-sref="new.workout" ng-if="token">+ Rutina</a>
+<div ng-if="!data.sets" ng-repeat="w in data">
+	<a ng-href="#/rutinas/{{w.id}}"><h2>{{w.name}}</h2></a>
+	<a ng-href="#/authors/{{w.auth_id}}"><h4>{{r.rut_auth}}</h4></a>
+	<h4>Creada: {{w.created}}</h4>
+	<p>{{w.desc}}</p>
+	<img ng-src="img/rutinas/{{w.img}}" alt="{{w.img_desc}}" title="{{w.img_desc}}">
+	<div ng-controller="navCtrl" ng-if="token">
+		<a ui-sref="edit.workout({id: w.id})">Modificar</a>
+		<a ui-sref="delete.workout({id: w.id})">Borrar artículo</a>
+	</div>
+</div>
+
+<div ng-if="data.sets">
+	<a ng-href="#/rutinas/{{data.id}}"><h2>{{data.name}}</h2></a>
+	<a ng-href="#/authors/{{data.auth_id}}"><h4>{{data.rut_auth}}</h4></a>
+	<h4>Creada: {{data.created}}</h4>
+	<p>{{data.desc}}</p>
+	<h4>Sets:</h4>
+	<ul ng-repeat="s in data.sets track by $index">
+		<h2>Set {{$index+1}} x {{s.reps}} repeticiones</h2>
+		<h5>Ejercicios:</h5>
+		<ol ng-repeat="e in data.sets[$index+1].exrcs">
+			<li>{{e.name}} ({{e.cals}} calorías x {{e.reps}} repeticiones): {{e.desc}}</li>
+		</0l>
+	</ul>
+	<div ng-if="token">
+		<a ui-sref="edit.workout({id: w.id})"Modificar</a>
+		<a ui-sref="delete.workout({id: w.id})">Borrar artículo</a>
+	</div>
+</div>
