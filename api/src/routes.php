@@ -215,52 +215,53 @@
 			$this->logger->info("Brenvita POST - '/rutinas' route");
 		});
 
-		$app->post('/articulos/new', function ($req, $res, $args) { # done
-			$auth = $_SESSION['user']['id'];
-			$name = $_POST['title'];
-			$text = $_POST['text'];
+		$app->post('/articulos-new', function ($req, $res, $args) { # done
 
-			# var_dump(getcwd());
-		
-			if ($_POST['video'] != '') {
-				$video = $_POST['video'];
-				# INSERT INTO `articulos`(`id`, `auth_id`, `vid_switch`, `video`, `name`, `text`, `created`, `img`, `img_desc`) VALUES ([value-1],[value-2],[value-3],[value-4],[value-5],[value-6],[value-7],[value-8],[value-9])
-				$sql = "INSERT INTO articulos VALUES (null, '$auth', 1, '$video', '$name', '$text', current_timestamp)";
+			$auth = $_POST['uid'];
+			$name = $_POST['art_name'];
+			$text = $_POST['editor'];
+			$video = $_POST['art_vide'];
+
+			$file = $_FILES['img'];
+			$fnam = $file['name'];
+			$ides = $_POST['img_desc'];
+
+			# var_dump($_POST, $file);
+
+			if ($video != '') { # if video is not null
+				$sql = "INSERT INTO articulos 
+				(auth_id, vid_switch, video, name, text, created) 
+				VALUES ('$auth', 1, '$video', '$name', :html, current_timestamp)"; 
 			}
-			else { # image upload handler
-				$targetDir = getcwd()."../../img/articles/";
-				$fileType = pathinfo($_FILES['img']['name'], PATHINFO_EXTENSION);
-
+			else { # if video is null we use pic
+				# var_dump($file);
+				$sql = "INSERT INTO articulos (id, auth_id, name, text, created, img, img_desc) VALUES (null, '$auth', '$name', '$text', current_timestamp, '$fnam', '$ides')";
+				$targetDir = '../../img/articles/';
+				$targetFile = $targetDir.$file['name'];
+				$fileType =  pathinfo($targetFile,PATHINFO_EXTENSION);
 				
-				$sql = "SELECT MAX(id) as 'id' FROM articulos";
-				$pdo = $this->db->prepare($sql);
-				$pdo->execute();
-				$data = $pdo->fetch(PDO::FETCH_ASSOC);
-				$id = (int) $data['id']+1;
-				$targetFile = $targetDir.basename($id.'.'.$fileType); # change for a proper name
+				$upload = true;
 
-				$uploadStatus = true;
 				$accepted = array("jpg", "jpeg", "png", "gif");
 				$check = getimagesize($_FILES["img"]["tmp_name"]);
 
-				if ($check == false) { $uploadStatus = false; $_SESSION['fail'] = "verification failed: check"; }
-				elseif (file_exists($targetFile)) {$uploadStatus = false; $_SESSION['fail'] = "verification failed: file exists";}
-				elseif (!in_array($fileType, $accepted)) {$uploadStatus = false; $_SESSION['fail'] = "verification failed: not in array";}
-				else {$_SESSION['ok'] = $targetFile; }
+				if ($check == false) { $upload = false; echo "verification failed: check"; }
+				elseif (file_exists($targetFile)) { $upload = false; echo "verification failed: file exists"; }
+				elseif (!in_array($fileType, $accepted)) { $upload = false; echo "verification failed: filetype not good"; }
 
-				$sql = "INSERT INTO articulos VALUES (null, '$auth', 0, null, '$name', '$text', current_timestamp)";
-				if ($uploadStatus == true) {
-					if (move_uploaded_file($_FILES["img"]["tmp_name"], $targetFile)) { 
-						$_SESSION['ok'] = 'File uploadded successfully'; 
-						$this->logger->info("Brenvita new article: ".$sql." at: ".time());
-					}
-					else {$_SESSION['fail'] = 'There was a mistake uploading the image!';}
-				}
-				else return $res->withStatus(400)->withHeader('Location', '/articulos');
-			}
+				# var_dump($upload);
 
-			$this->logger->info("Brenvita new article: ".$sql." at: ".time());
-			return $res->withStatus(200)->withHeader('Location', '/articulos');
+				if (move_uploaded_file($_FILES["img"]["tmp_name"], $targetFile)) $this->logger->info("Brenvita new article: ".$sql." at: ".time());
+				else { echo 'There was a mistake uploading the image!'; }	
+			} 
+
+			$pdo = $this->db->prepare($sql);
+			$pdo->bindValue(':html', $text, PDO::PARAM_STR);
+			# echo $sql;
+			$pdo->execute();
+			
+			return $res->withStatus(200)->withHeader('Location', 'http://brenvita.dev/#/articulos/');
+			# else $res->withStatus(400)->withHeader('Location', '#/agregar/articulo');
 
 		});
 

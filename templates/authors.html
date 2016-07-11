@@ -1,5 +1,4 @@
-<h1>Recetas</h1>
-<a ui-sref="new.recipes" ng-if="token">+ Receta</a>
+<h1>Autores</h1>
 <div ng-if="!data.ingredients" ng-repeat="r in data">
 	<a ng-href="#/recetas/{{r.id}}"><h1>{{r.name}}</h1></a>
 	<a ng-href="#/authors/{{r.auth_id}}">{{r.auth}}</a>

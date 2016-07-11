@@ -1,5 +1,16 @@
 <h1>Nuevo Artículo</h1>
 
-<form method="POST" action="/api/public/articulos/new">
-	<button>Test!</button>
+
+<form method="POST" action="api/public/articulos-new" enctype="multipart/form-data" ng-controller="formCtrl">
+	<input type="text" name="art_name" placeholder="Nombre del artículo" required><br>
+	<input type="text" name="art_vide" placeholder="Video del artículo"><br>
+	<textarea  name="editor" id="editor" placeholder="Texto del artículo"></textarea><br>
+	<input type="hidden" name="uid" value="{{decoded.uid}}">
+	<input type="file" name="img"><br>
+	<input type="text" name="img_desc" placeholder="Descripción de la imágen"><br>
+	<button>Submit</button>
 </form>
+
+<script>
+	CKEDITOR.replace( 'editor' );
+</script>

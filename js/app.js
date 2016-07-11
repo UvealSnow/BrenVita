@@ -1,6 +1,6 @@
 // modeule declaration
 
-	var app = angular.module('brenVita', ['ui.router', 'ngCookies']);
+	var app = angular.module('brenVita', ['ui.router', 'ngCookies', 'base64']);
 
 // route configuration
 
@@ -15,7 +15,7 @@
 			.state('workouts', { url: '/rutinas/{id}', controller: 'workCtrl', templateUrl: 'templates/rutinas.html', data: { requriesLogin: false } })
 			.state('vlogs', { url: '/vlogs/{id}', controller: 'vlogCtrl', templateUrl: 'templates/vlogs.html', data: { requriesLogin: false } })
 			.state('authors', { url: '/autores/{id}', controller: 'authCtrl', templateUrl: 'templates/authors.html', data: { requriesLogin: false } })
-			.state('login', { url: '/admin-login', controller: 'loginCtrl', templateUrl: 'templates/forms/login.html', data: { requriesLogin: false } })
+			.state('login', { url: '/admin-login', controller: 'loginCtrl', templateUrl: 'templates/login.html', data: { requriesLogin: false } })
 			.state('logout', { url: '/logout', controller: 'logoutCtrl' })
 			.state('new', { abstract: true, url: '/agregar', template: "<ui-view/>", data: { requriesLogin: true } })
 			.state('new.article', { url: '/articulo', templateUrl: 'templates/new.article.html' })
@@ -36,6 +36,7 @@
 	});
 
 // index controller
+	
 	app.controller('mainCtrl', ['$scope', '$http', '$cookies', function ($scope, $http, $cookies) {
 		console.log('index ctrl in');
 	}]);
@@ -92,7 +93,7 @@
 		});
 	}]);
 
-// vlogs controllers 
+// author controllers 
 
 	app.controller('authCtrl', ['$stateParams', '$scope', '$http', '$cookies', function ($stateParams, $scope, $http, $cookies) {
 		$scope.token = $cookies.get('token');
@@ -104,7 +105,6 @@
 			console.log('request failed: '+ res.status);
 		});
 	}]);
-
 
 // forms controllers 
 
@@ -134,8 +134,11 @@
 		$window.location.href = '#/';
 	}]);
 
-	app.controller('formCtrl', ['$scope', '$http', function ($scope, $http) {
-		// console.log('form controller in');
+	app.controller('formCtrl', ['$scope', '$http', '$cookies', '$base64', function ($scope, $http, $cookies, $base64) {
+		$scope.token = $cookies.get('token');
+		$scope.token = $scope.token.split('.');
+		$scope.decoded = JSON.parse(decodeURIComponent(escape($base64.decode($scope.token[1]))));
+		// console.log($scope.decoded);
 	}]);
 
 // navbar controller
@@ -146,6 +149,28 @@
 		// console.log('navCtrl in, logged = '+$scope.token);
 	}]);
 
+// upload controller
+	
+	app.controller('upldCtrl', ['$scope', 'Upload', '$timeout', function ($scope, Upload, $timeout) {
+		$scope.uploadPic = function(file) {
+		    file.upload = Upload.upload({
+		      	url: 'http://brenvita.dev/api/public/articulos',
+		      	data: { username: $scope.username, file: file },
+		    });
+
+		    file.upload.then(function (response) {
+		      	$timeout(function () {
+		        	file.result = response.data;
+		      	});
+		    }, function (response) {
+		      	if (response.status > 0)
+		        	$scope.errorMsg = response.status + ': ' + response.data;
+		    }, function (evt) {
+		      	// Math.min is to fix IE which reports 200% sometimes
+		      	file.progress = Math.min(100, parseInt(100.0 * evt.loaded / evt.total));
+		    });
+		}
+	}]);
 
 // services
 	
