@@ -1,6 +1,6 @@
 // modeule declaration
 
-	var app = angular.module('brenVita', ['ui.router', 'ngCookies', 'base64']);
+	var app = angular.module('brenVita', ['ui.router', 'ngCookies', 'base64', 'angucomplete-alt']);
 
 // route configuration
 
@@ -19,7 +19,8 @@
 			.state('logout', { url: '/logout', controller: 'logoutCtrl' })
 			.state('new', { abstract: true, url: '/agregar', template: "<ui-view/>", data: { requriesLogin: true } })
 			.state('new.article', { url: '/articulo', templateUrl: 'templates/new.article.html' })
-			.state('new.recipes', { url: '/receta', templateUrl: 'templates/new.recipe.html' })
+			.state('new.recipe', { url: '/receta', templateUrl: 'templates/new.recipe.html' })
+			.state('new.ingredient', { url: '/ingrediente', templateUrl: 'templates/new.ingredient.html' })
 			.state('new.workout', { url: '/rutina', templateUrl: 'templates/new.workout.html' })
 			.state('new.vlog', { url: '/vlog', templateUrl: 'templates/new.vlog.html' })
 			.state('edit', { abstract: true, url: '/editar', template: "<ui-view/>", data: { requriesLogin: true } })
@@ -139,6 +140,22 @@
 		$scope.token = $scope.token.split('.');
 		$scope.decoded = JSON.parse(decodeURIComponent(escape($base64.decode($scope.token[1]))));
 		// console.log($scope.decoded);
+	}]);
+
+	app.controller('addFields', ['$scope', function ($scope) {
+		$scope.ingredients = [{}];
+
+		$scope.addField = function () {
+			$scope.ingredients.push({});
+		};
+	}]);
+
+	app.controller('addSteps', ['$scope', function ($scope) {
+		$scope.steps = [{}];
+
+		$scope.addStep = function () {
+			$scope.steps.push({});
+		};
 	}]);
 
 // navbar controller

@@ -1,5 +1,35 @@
 <h1>Nueva Receta</h1>
-
-<form method="POST" action="/api/public/articulos/new">
+<a href="#/agregar/ingrediente">Nuevo Ingrediente</a><br><br>
+<form method="POST" action="/api/public/recetas-new" enctype="multipart/form-data">
+	<input type="text" name="recipeName" placeholder="Nombre de la receta"><br>
+	<input type="text" name="recipeVideo" placeholder="Video de la receta"><br><br>
+	<h2>Descripción de la receta</h2>
+	<textarea  name="recipeText" id="editor" placeholder="Texto del artículo"></textarea><br>
+	<div ng-controller="addFields">
+		<div ng-repeat="i in ingredients track by $index">
+			<input type="text" name="ingredientes[{{$index}}][qnt]" placeholder="Cantidad">
+			<angucomplete-alt id="members"
+		    placeholder="Ingredientes"
+		    pause="100"
+		    selected-object=""
+		    remote-url="api/public/ingredientes?name="
+		    remote-url-data-field="res"
+		    title-field="id,name,unidad"
+		    description-field="ingrediente"
+		    input-class="form-control form-control-small"
+		    input-name="ingredientes[{{$index}}][name]" />
+		</div>
+		<a href ng-click="addField();">+ Add ingredient</a href><br><br>
+	</div>
+	<div ng-controller="addSteps">
+		<input type="text" ng-repeat="s in steps" name="step[{{$index}}]" placeholder="Paso {{$index + 1}}">
+		<a href ng-click="addStep();">+ Add step</a href><br><br>
+	</div>
+	<input type="file" name="img"><br><br>
+	<input type="text" name="imgDesc" placeholder="Descripciónde la imágen"><br><br>
 	<button>Test!</button>
 </form>
+
+<script>
+	CKEDITOR.replace( 'editor' );
+</script>

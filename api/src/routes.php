@@ -1,6 +1,23 @@
 <?php
 	// GET Routes
 
+		$app->get('/ingredientes', function ($req, $res, $args) { # done
+			$name = $_GET['name'];
+
+			$sql = "SELECT * FROM ingredientes WHERE name LIKE '%$name%' COLLATE UTF8_GENERAL_CI";
+
+			$pdo = $this->db->prepare($sql);
+			$pdo->execute();
+			$raw = $pdo->fetchAll(PDO::FETCH_ASSOC);
+
+			foreach ($raw as $row) {
+				$data['res'][] = $row;
+			}
+
+			return $res->withJson($data, 200);
+
+		});
+
 		$app->get('/recetas[/{id:[0-9]+}]', function ($req, $res, $args) { # done
 
 			if (isset($args['id'])) {
@@ -51,6 +68,7 @@
 				return $res->withJson($data, 200);
 				$this->logger->info("Brenvita '/articulos' route");
 			}
+		
 		});
 
 		$app->get('/rutinas[/{id:[0-9]+}]', function ($req, $res, $args) { # done
@@ -103,6 +121,7 @@
 				$data = $pdo->fetchAll(PDO::FETCH_ASSOC);
 				return $res->withJson($data, 200);
 			}
+		
 		});
  
 		$app->get('/articulos[/{id:[0-9]+}]', function ($req, $res, $args) { # done
@@ -123,6 +142,7 @@
 			$data = $pdo->fetchAll(PDO::FETCH_ASSOC);
 
 			return $res->withJson($data, 200);
+		
 		});
 
 		$app->get('/vlogs[/{id:[0-9]+}]', function ($req, $res, $args) { # done
@@ -141,6 +161,7 @@
 			$data = $pdo->fetchAll(PDO::FETCH_ASSOC);
 
 			return $res->withJson($data, 200);
+		
 		});
 
 		$app->get('/logout', function ($req, $res, $args) { # done
@@ -149,6 +170,7 @@
 				return $res->withStatus(200)->withHeader('Location', 'http://brenvita.dev/');
 			}
 			else return $res->withStatus(400)->withHeader('Location', 'http://brenvita.dev/');
+		
 		});
 
 	// POST Routes 
@@ -205,13 +227,83 @@
 				# var_dump($_POST);
 				return $res->withStatus(401);
 			} 
+		
 		});
 
-		$app->post('/recetas/new', function ($req, $res, $args) {
-			$this->logger->info("Brenvita POST - '/recetas' route");
+		$app->post('/recetas-new', function ($req, $res, $args) { # done
+			$vars = $_POST;
+			$file = $_FILES['img'];
+			# var_dump($vars, $file);
+
+			$ingredientes = $_POST['ingredientes'];
+			$steps = $_POST['step'];
+
+			$targetDir = '../../img/recetas/';
+			$targetFile = $targetDir.$file['name'];
+			$fileType =  pathinfo($targetFile,PATHINFO_EXTENSION);
+
+			$upload = true;
+
+			$accepted = array("jpg", "jpeg", "png", "gif");
+			$check = getimagesize($file["tmp_name"]);
+
+			if ($check == false) { $upload = false; echo "verification failed: check"; }
+			elseif (file_exists($targetFile)) { $upload = false; echo "verification failed: file exists"; }
+			elseif (!in_array($fileType, $accepted)) { $upload = false; echo "verification failed: filetype not good"; }
+
+			# var_dump($upload);
+
+			if (move_uploaded_file($file["tmp_name"], $targetFile)) {
+				$this->logger->info("Brenvita new recipe img: ".$targetFile." at: ".time());
+
+				# var_dump($ids);
+
+				$sql = "INSERT INTO `recetas`(`name`, `video`, `text`, `created`, `img`, `img_desc`) VALUES (:name, :video, :html, current_timestamp, :imgName, :imgDesc)";
+				$pdo = $this->db->prepare($sql);
+
+				$pdo->bindParam(':name', 	$vars['recipeName'], 	PDO::PARAM_STR);
+				$pdo->bindParam(':video', 	$vars['recipeVideo'], 	PDO::PARAM_STR);
+				$pdo->bindValue(':html', 	$vars['recipeText'], 	PDO::PARAM_STR);
+				$pdo->bindParam(':imgName', $file['name'], 			PDO::PARAM_INT);
+				$pdo->bindParam(':imgDesc', $vars['imgDesc'], 		PDO::PARAM_STR);
+
+				$pdo->execute();
+
+				$sql = "SELECT MAX(id) as 'id' FROM recetas";
+				$pdo = $this->db->prepare($sql);
+				$pdo->execute();
+				$rid = $pdo->fetch(PDO::FETCH_ASSOC);
+				$rid = $rid['id'];
+				# var_dump($rid);
+
+				$sql = '';
+				foreach ($ingredientes as $row) {
+					$tmp = explode(' ', $row['name']);
+					$id = $tmp[0];
+					$qnt = $row['qnt'];
+					
+					$sql .= "INSERT INTO `rec_ing`(`rec_id`, `ing_id`, `cantidad`) VALUES ('$rid', '$id', '$qnt'); ";
+				}
+				# var_dump($sql);
+				$pdo = $this->db->prepare($sql);
+				$pdo->execute();
+
+				$i = 1;
+				$sql = '';
+				foreach ($steps as $row) {
+					$txt = $row;
+					$sql .= "INSERT INTO `pasos`(`rec_id`, `order`, `text`) VALUES ('$rid', '$i', '$txt'); ";
+					$i++;
+				}
+				# var_dump($sql);
+				$pdo = $this->db->prepare($sql);
+				$pdo->execute();
+			}
+			return $res->withStatus(200)->withHeader('Location', 'http://brenvita.dev/#/recetas/');
+		
 		});
 
-		$app->post('/rutinas/new', function ($req, $res, $args) {
+		$app->post('/rutinas-new', function ($req, $res, $args) {
 			$this->logger->info("Brenvita POST - '/rutinas' route");
 		});
 
@@ -265,8 +357,44 @@
 
 		});
 
-		$app->post('/vlogs/new', function ($req, $res, $args) {
+		$app->post('/vlogs-new', function ($req, $res, $args) {
 			$this->logger->info("Brenvita POST - '/vlogs' route");
+		});
+
+		$app->post('/ingrediente-new', function ($req, $res, $args) { # done
+
+			$vars = $_POST;
+			$file = $_FILES['file'];
+
+			# var_dump($vars, $file);
+
+			$targetDir = '../../img/ingredients/';
+			$targetFile = $targetDir.$file['name'];
+			$fileType =  pathinfo($targetFile,PATHINFO_EXTENSION);
+
+			$upload = true;
+
+			$sql = "INSERT INTO `ingredientes`(`name`, `cals`, `unidad`, `img`) VALUES (:name, :cals, :unit, :img)";
+			$pdo = $this->db->prepare($sql);
+
+			$pdo->bindParam(':name', $vars['name'], PDO::PARAM_STR);
+			$pdo->bindParam(':cals', $vars['cals'], PDO::PARAM_INT);
+			$pdo->bindParam(':unit', $vars['unit'], PDO::PARAM_STR);
+			$pdo->bindParam(':img',  $file['name'], PDO::PARAM_STR);
+
+			$accepted = array("jpg", "jpeg", "png", "gif");
+			$check = getimagesize($file["tmp_name"]);
+
+			if ($check == false) { $upload = false; echo "verification failed: check"; }
+			elseif (file_exists($targetFile)) { $upload = false; echo "verification failed: file exists"; }
+			elseif (!in_array($fileType, $accepted)) { $upload = false; echo "verification failed: filetype not good"; }
+
+			if (move_uploaded_file($file["tmp_name"], $targetFile)) $this->logger->info("Brenvita new article: ".$sql." at: ".time());
+			
+			$pdo->execute();
+
+			return $res->withStatus(200)->withHeader('Location', 'http://brenvita.dev/#/agregar/ingrediente');
+
 		});
 
 	// PUT Routes
