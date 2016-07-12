@@ -358,7 +358,41 @@
 		});
 
 		$app->post('/vlogs-new', function ($req, $res, $args) {
-			$this->logger->info("Brenvita POST - '/vlogs' route");
+
+			$vars = $_POST;
+			$file = $_FILES['img'];
+			# var_dump($vars, $file);
+
+			$targetDir = '../../img/vlogs/';
+			$targetFile = $targetDir.$file['name'];
+			$fileType =  pathinfo($targetFile,PATHINFO_EXTENSION);
+
+			$upload = true;
+
+			$accepted = array("jpg", "jpeg", "png", "gif");
+			$check = getimagesize($file["tmp_name"]);
+
+			if ($check == false) { $upload = false; echo "verification failed: check"; }
+			elseif (file_exists($targetFile)) { $upload = false; echo "verification failed: file exists"; }
+			elseif (!in_array($fileType, $accepted)) { $upload = false; echo "verification failed: filetype not good"; }
+
+			if (move_uploaded_file($file["tmp_name"], $targetFile)) {
+				$sql = "INSERT INTO `vlogs` 
+					(`name`, `text`, `video`, `created`, `img`, `img_desc`) VALUES 
+					(:name, :html, :video, current_timestamp, :img, :desc)";
+
+				$pdo = $this->db->prepare($sql);
+				$pdo->bindParam(':name', $vars['vlog_name'], PDO::PARAM_STR);
+				$pdo->bindValue(':html', $vars['editor'], PDO::PARAM_STR);
+				$pdo->bindParam(':video', $vars['vlog_vide'], PDO::PARAM_STR);
+				$pdo->bindParam(':img', $file['name'], PDO::PARAM_STR);
+				$pdo->bindParam(':desc', $vars['vlog_name'], PDO::PARAM_INT);
+
+				$pdo->execute();
+
+				return $res->withStatus(200)->withHeader('Location', 'http://brenvita.dev/#/vlogs/');
+			}
+
 		});
 
 		$app->post('/ingrediente-new', function ($req, $res, $args) { # done
