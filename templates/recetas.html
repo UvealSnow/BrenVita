@@ -1,13 +1,13 @@
 <h1>Recetas</h1>
 <a ui-sref="new.recipe" ng-if="token">+ Receta</a>
-<div ng-if="!data.ingredients" ng-repeat="r in data">
-	<a ng-href="#/recetas/{{r.id}}"><h1>{{r.name}}</h1></a>
-	<a ng-href="#/authors/{{r.auth_id}}"><h4>{{r.auth}}</h4></a>
-	<p>{{r.text}}</p>
+<div ui-sref="recipes({id: r.id})" ng-if="!data.ingredients" ng-repeat="r in data">
+	<h1>{{r.name}}</h1>
+	<h4>{{r.auth}}</h4>
+	<p ng-bind-html="r.text"></p>
 	<img ng-src="img/recetas/{{r.img}}" title="{{r.img_desc}}" alt="{{r.img_desc}}">
 	<div ng-controller="navCtrl" ng-if="token">
 		<a ui-sref="edit.recipe({id: r.id})">Modificar</a>
-		<a href ng-click="delete(r.id)">Borrar</a>
+		<a ui-sref="delete.recipe({id: r.id})">Borrar</a>
 	</div>
 </div>
 
@@ -25,6 +25,6 @@
 	</ul>
 	<div ng-if="token">
 		<a ui-sref="edit.recipe({id: data.id})">Modificar</a>
-		<a href ng-click="delete.recipe({id: data.id})">Borrar</a>
+		<a href ui-sref="delete.recipe({id: data.id})">Borrar</a>
 	</div>
 <div>

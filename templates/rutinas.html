@@ -1,11 +1,11 @@
 <h1>Rutinas</h1>
 <a ui-sref="new.workout" ng-if="token">+ Rutina</a>
-<div ng-if="!data.sets" ng-repeat="w in data">
-	<a ng-href="#/rutinas/{{w.id}}"><h2>{{w.name}}</h2></a>
-	<a ng-href="#/authors/{{w.auth_id}}"><h4>{{r.rut_auth}}</h4></a>
+<div ui-sref="workouts({id: w.id})" ng-if="!data.sets" ng-repeat="w in data">
+	<h2>{{w.name}}</h2>
+	<h4>{{r.rut_auth}}</h4>
 	<h4>Creada: {{w.created}}</h4>
-	<p>{{w.desc}}</p>
-	<img ng-src="img/rutinas/{{w.img}}" alt="{{w.img_desc}}" title="{{w.img_desc}}">
+	<p ng-bind-html="w.desc"></p>
+	<img ng-src="img/workouts/{{w.img}}" alt="{{w.img_desc}}" title="{{w.img_desc}}">
 	<div ng-controller="navCtrl" ng-if="token">
 		<a ui-sref="edit.workout({id: w.id})">Modificar</a>
 		<a ui-sref="delete.workout({id: w.id})">Borrar artículo</a>

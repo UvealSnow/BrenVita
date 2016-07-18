@@ -1,5 +1,41 @@
 <h1>Nueva Rutina</h1>
 
-<form method="POST" action="/api/public/articulos/new">
+<a ui-sref="new.exercise">Nuevo Ejercicio</a><br><br>
+<form method="POST" action="/api/public/rutinas-new" enctype="multipart/form-data" ng-controller="formCtrl">
+	<input type="text" name="workoutName" placeholder="Nombre de la rutina"><br>
+	<input type="hidden" name="uid" value="{{decoded.uid}}">
+	<h2>Descripción de la rutina</h2>
+	<textarea  name="workoutText" id="editor" placeholder="Texto del artículo"></textarea><br>
+	<h2>Sets</h2>
+	<div ng-controller="addSets">
+		<div ng-repeat="s in sets track by $index">
+			<input type="text" name="sets[{{$index}}][name]" placeholder="Nombre del Set"><br>
+			<input type="text" name="sets[{{$index}}][qnty]" placeholder="Repeticiones del Set"><br>
+			<input type="text" name="sets[{{$index}}][desc]" placeholder="Descripción del Set"><br><br>
+			<div ng-controller="addExer">
+				<div ng-repeat="e in exer track by $index">
+					<input type="text" name="sets[{{$parent.$index}}][exer][{{$index}}][qnty]" placeholder="Cantidad">
+					<angucomplete-alt id="members"
+				    placeholder="Ejercicio"
+				    pause="100"
+				    selected-object=""
+				    remote-url="api/public/ejercicios?name="
+				    remote-url-data-field="res"
+				    title-field="id,name,unidad"
+				    description-field="ingrediente"
+				    input-class="form-control form-control-small"
+				    input-name="sets[{{$parent.$index}}][exer][{{$index}}][name]" />
+				</div>
+			    <a href ng-click="addExer();">+ Agregar ejercicio</a href><br><br>
+			</div>
+		</div>
+		<a href ng-click="addSet();">+ Agregar Set</a href><br><br>
+	</div>
+	<input type="file" name="img"><br><br>
+	<input type="text" name="imgDesc" placeholder="Descripciónde la imágen"><br><br>
 	<button>Test!</button>
 </form>
+
+<script>
+	CKEDITOR.replace( 'editor' );
+</script>

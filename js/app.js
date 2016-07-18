@@ -1,6 +1,6 @@
 // modeule declaration
 
-	var app = angular.module('brenVita', ['ui.router', 'ngCookies', 'base64', 'angucomplete-alt']);
+	var app = angular.module('brenVita', ['ui.router', 'ngCookies', 'base64', 'angucomplete-alt', 'ngSanitize']);
 
 // route configuration
 
@@ -22,6 +22,7 @@
 			.state('new.recipe', { url: '/receta', templateUrl: 'templates/new.recipe.html' })
 			.state('new.ingredient', { url: '/ingrediente', templateUrl: 'templates/new.ingredient.html' })
 			.state('new.workout', { url: '/rutina', templateUrl: 'templates/new.workout.html' })
+			.state('new.exercise', { url: '/ejercicio', templateUrl: 'templates/new.exercise.html' })
 			.state('new.vlog', { url: '/vlog', templateUrl: 'templates/new.vlog.html' })
 			.state('edit', { abstract: true, url: '/editar', template: "<ui-view/>", data: { requriesLogin: true } })
 			.state('edit.article', { url: '/articulo/{id}', templateUrl: 'templates/edit.article.html' })
@@ -29,10 +30,10 @@
 			.state('edit.workout', { url: '/rutina/{id}', templateUrl: 'templates/edit.workout.html' })
 			.state('edit.vlog', { url: '/vlog/{id}', templateUrl: 'templates/edit.vlog.html' })
 			.state('delete', { abstract: true, url: '/eliminar', template: "<ui-view/>", data: { requriesLogin: true } })
-			.state('delete.article', { url: '/articulo/{id}', templateUrl: 'templates/delete.article.html' })
-			.state('delete.recipe', { url: '/receta/{id}', templateUrl: 'templates/delete.recipe.html' })
-			.state('delete.workout', { url: '/rutina/{id}', templateUrl: 'templates/delete.workout.html' })
-			.state('delete.vlog', { url: '/vlog/{id}', templateUrl: 'templates/delete.vlog.html' })
+			.state('delete.article', { url: '/articulo/{id}', controller: 'deleteArtCtrl' })
+			.state('delete.recipe', { url: '/receta/{id}', controller: 'deleteRecCtrl' })
+			.state('delete.workout', { url: '/rutina/{id}', controller: 'deleteWrkCtrl' })
+			.state('delete.vlog', { url: '/vlog/{id}', controller: 'deleteVlgCtrl' })
 			.state('404', { url: '/404', templateUrl: 'templates/404.html', data: { requriesLogin: false } });
 	});
 
@@ -44,7 +45,7 @@
 
 // articles controllers 
 
-	app.controller('artiCtrl', ['$stateParams', '$scope', '$http', '$cookies', function ($stateParams, $scope, $http, $cookies) {
+	app.controller('artiCtrl', ['$stateParams', '$scope', '$http', '$cookies', '$state', function ($stateParams, $scope, $http, $cookies, $state) {
 		$scope.token = $cookies.get('token');
 		var url = 'http://brenvita.dev/api/public/articulos';
 		if ($stateParams.id != '') url += '/'+$stateParams.id;
@@ -53,11 +54,26 @@
 		}, function (res) {
 			console.log('request failed: '+ res.status);
 		});
+
+		$scope.alert = function (did) {
+			confirm('Esta acción no puede deshacerse, seguro que quieres borrarlo?');
+			$state.go('delete.article', {id: did})
+		}
+	}]);
+
+	app.controller('deleteArtCtrl', ['$stateParams', '$scope', '$http', '$state', function ($stateParams, $scope, $http, $state) {
+		console.log('delete art: '+$stateParams.id);
+		var url = 'api/public/articulos/delete/'+$stateParams.id;
+		$http.delete(url).then(function (res) {
+			$state.go('articles');
+		}, function (res) {
+			console.log('request failed: '+ res.status);
+		});
 	}]);
 
 // recipes controllers 
 
-	app.controller('reciCtrl', ['$stateParams', '$scope', '$http', '$cookies', function ($stateParams, $scope, $http, $cookies) {
+	app.controller('reciCtrl', ['$stateParams', '$scope', '$http', '$cookies', '$state', function ($stateParams, $scope, $http, $cookies, $state) {
 		$scope.token = $cookies.get('token');
 		var url = 'http://brenvita.dev/api/public/recetas';
 		if ($stateParams.id != '') url += '/'+$stateParams.id;
@@ -66,11 +82,26 @@
 		}, function (res) {
 			console.log('request failed: '+ res.status);
 		});
+
+		$scope.alert = function (did) {
+			confirm('Esta acción no puede deshacerse, seguro que quieres borrarlo?');
+			$state.go('delete.article', {id: did})
+		}
+	}]);
+
+	app.controller('deleteRecCtrl', ['$stateParams', '$scope', '$http', '$state', function ($stateParams, $scope, $http, $state) {
+		console.log('delete art: '+$stateParams.id);
+		var url = 'api/public/recetas/delete/'+$stateParams.id;
+		$http.delete(url).then(function (res) {
+			$state.go('recipes');
+		}, function (res) {
+			console.log('request failed: '+ res.status);
+		});
 	}]);
 
 // workouts controllers 
 
-	app.controller('workCtrl', ['$stateParams', '$scope', '$http', '$cookies', function ($stateParams, $scope, $http, $cookies) {
+	app.controller('workCtrl', ['$stateParams', '$scope', '$http', '$cookies', '$state', function ($stateParams, $scope, $http, $cookies, $state) {
 		$scope.token = $cookies.get('token');
 		var url = 'http://brenvita.dev/api/public/rutinas';
 		if ($stateParams.id != '') url += '/'+$stateParams.id;
@@ -79,16 +110,46 @@
 		}, function (res) {
 			console.log('request failed: '+ res.status);
 		});
+
+		$scope.alert = function (did) {
+			confirm('Esta acción no puede deshacerse, seguro que quieres borrarlo?');
+			$state.go('delete.article', {id: did})
+		}
+	}]);
+
+	app.controller('deleteWrkCtrl', ['$stateParams', '$scope', '$http', '$state', function ($stateParams, $scope, $http, $state) {
+		console.log('delete art: '+$stateParams.id);
+		var url = 'api/public/rutinas/delete/'+$stateParams.id;
+		$http.delete(url).then(function (res) {
+			$state.go('workouts');
+		}, function (res) {
+			console.log('request failed: '+ res.status);
+		});
 	}]);
 
 // vlogs controllers 
 
-	app.controller('vlogCtrl', ['$stateParams', '$scope', '$http', '$cookies', function ($stateParams, $scope, $http, $cookies) {
+	app.controller('vlogCtrl', ['$stateParams', '$scope', '$http', '$cookies', '$state', function ($stateParams, $scope, $http, $cookies, $state) {
 		$scope.token = $cookies.get('token');
 		var url = 'http://brenvita.dev/api/public/vlogs';
 		if ($stateParams.id != '') url += '/'+$stateParams.id;
 		$http.get(url).then(function (res) {
 			$scope.data = res.data;
+		}, function (res) {
+			console.log('request failed: '+ res.status);
+		});
+
+		$scope.alert = function (did) {
+			confirm('Esta acción no puede deshacerse, seguro que quieres borrarlo?');
+			$state.go('delete.article', {id: did})
+		}
+	}]);
+
+	app.controller('deleteVlgCtrl', ['$stateParams', '$scope', '$http', '$state', function ($stateParams, $scope, $http, $state) {
+		console.log('delete art: '+$stateParams.id);
+		var url = 'api/public/vlogs/delete/'+$stateParams.id;
+		$http.delete(url).then(function (res) {
+			$state.go('vlogs');
 		}, function (res) {
 			console.log('request failed: '+ res.status);
 		});
@@ -155,6 +216,22 @@
 
 		$scope.addStep = function () {
 			$scope.steps.push({});
+		};
+	}]);
+
+	app.controller('addSets', ['$scope', function ($scope) {
+		$scope.sets = [{}];
+
+		$scope.addSet = function () {
+			$scope.sets.push({});
+		};
+	}]);
+
+	app.controller('addExer', ['$scope', function ($scope) {
+		$scope.exer = [{}];
+
+		$scope.addExer = function () {
+			$scope.exer.push({});
 		};
 	}]);
 

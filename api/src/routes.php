@@ -18,6 +18,23 @@
 
 		});
 
+		$app->get('/ejercicios', function ($req, $res, $args) { # done
+			$name = $_GET['name'];
+
+			$sql = "SELECT * FROM ejercicios WHERE name LIKE '%$name%' COLLATE UTF8_GENERAL_CI";
+
+			$pdo = $this->db->prepare($sql);
+			$pdo->execute();
+			$raw = $pdo->fetchAll(PDO::FETCH_ASSOC);
+
+			foreach ($raw as $row) {
+				$data['res'][] = $row;
+			}
+
+			return $res->withJson($data, 200);
+
+		});
+
 		$app->get('/recetas[/{id:[0-9]+}]', function ($req, $res, $args) { # done
 
 			if (isset($args['id'])) {
@@ -151,7 +168,7 @@
 
 			if (isset($args['id'])) {
 				$id = $args['id'];
-				$sql = $sql." WHERE id = '$id'";
+				$sql = $sql." WHERE v.id = '$id'";
 				$this->logger->info("Brenvita '/vlogs[/{$id}]' route");
 			}
 			else $this->logger->info("Brenvita '/vlogs' route");
@@ -304,7 +321,91 @@
 		});
 
 		$app->post('/rutinas-new', function ($req, $res, $args) {
-			$this->logger->info("Brenvita POST - '/rutinas' route");
+			$vars = $_POST;
+			$file = $_FILES['img'];
+
+			# var_dump($vars['sets'][0]);
+
+			$auth = $_POST['uid'];
+			$name = $_POST['workoutName'];
+			
+			$targetDir = '../../img/workouts/';
+			$targetFile = $targetDir.$file['name'];
+			$fileType =  pathinfo($targetFile, PATHINFO_EXTENSION);
+
+			$upload = true;
+
+			$accepted = array("jpg", "jpeg", "png", "gif");
+			$check = getimagesize($_FILES["img"]["tmp_name"]);
+
+			if ($check == false) { $upload = false; echo "verification failed: check"; }
+			elseif (file_exists($targetFile)) { $upload = false; echo "verification failed: file exists"; }
+			elseif (!in_array($fileType, $accepted)) { $upload = false; echo "verification failed: filetype not good"; }
+
+			if (move_uploaded_file($_FILES["img"]["tmp_name"], $targetFile) && $upload) $this->logger->info("Brenvita new article: at: ".time());
+			else { echo 'There was a mistake uploading the image!'; }
+
+			# create workout
+
+				$sql = "INSERT INTO `rutinas`(`auth_id`, `name`, `desc`, `created`, `img`, `img_desc`) VALUES (:auth, :name, :html, current_timestamp, :img, :img_desc)";
+
+				$pdo = $this->db->prepare($sql);
+				$pdo->bindParam(':auth', 		$vars['uid'], 			PDO::PARAM_STR);
+				$pdo->bindParam(':name', 		$vars['workoutName'], 	PDO::PARAM_STR);
+				$pdo->bindValue(':html', 		$vars['workoutText'], 	PDO::PARAM_STR);
+				$pdo->bindParam(':img', 		$file['name'], 			PDO::PARAM_STR);
+				$pdo->bindParam(':img_desc',	$vars['imgDesc'], 		PDO::PARAM_STR);
+
+				# echo $sql;
+
+				$pdo->execute();
+
+			# get new workout id
+
+				$sql = "SELECT MAX(id) as 'id' FROM rutinas";
+				$pdo = $this->db->prepare($sql);
+				$pdo->execute();
+				$wid = $pdo->fetch(PDO::FETCH_ASSOC);
+				$wid = $wid['id'];
+				# var_dump($wid);
+
+			# create sets & get sets ids
+
+				foreach ($vars['sets'] as $row) {
+					$sname = $row['name'];
+					$sqnty = $row['qnty'];
+					$sdesc = $row['desc'];
+					$sql = "INSERT INTO sets (`name`, `desc`, `created`) VALUES ('$sname', '$sdesc', current_timestamp)";
+					$pdo = $this->db->prepare($sql);
+					$pdo->execute();
+
+					$sql = "SELECT MAX(id) as 'id' FROM sets";
+					$pdo = $this->db->prepare($sql);
+					$pdo->execute();
+					$sid = $pdo->fetch(PDO::FETCH_ASSOC);
+					$sid = $sid['id'];
+
+					# populate rut_set
+
+					$sql = "INSERT INTO `rut_set` (`rut_id`, `set_id`, `reps`) VALUES ('$wid', '$sid', '$sqnty')";
+					$pdo = $this->db->prepare($sql);
+					$pdo->execute();
+					# var_dump($row['exer']);
+
+					foreach ($row['exer'] as $raw) {
+						$eid = explode(' ', $raw['name']);
+						$eid = $eid[0];
+						$eqnty = $raw['qnty'];
+
+						$sql = "INSERT INTO `set_eje`(`set_id`, `eje_id`, `reps`) VALUES ('$sid', '$eid', '$eqnty')";
+						$pdo = $this->db->prepare($sql);
+						$pdo->execute();
+						# var_dump($eid);
+					}
+				}
+
+			return $res->withStatus(200)->withHeader('Location', 'http://brenvita.dev/#/rutinas/');
+
 		});
 
 		$app->post('/articulos-new', function ($req, $res, $args) { # done
@@ -436,19 +537,39 @@
 	// DELETE Routes
 
 		$app->delete('/articulos/delete/{id}', function ($req, $res, $args) {
-			echo "delete articulo(id)";
+			$id = $args['id'];
+			$sql = "DELETE FROM articulos WHERE id = '$id'";
+			var_dump($sql);
+			$pdo = $this->db->prepare($sql);
+			$pdo->execute();
+			return $res->withStatus(200);
 		});
 
 		$app->delete('/vlogs/delete/{id}', function ($req, $res, $args) {
-			echo "delete vlog(id)";
+			$id = $args['id'];
+			$sql = "DELETE FROM vlogs WHERE id = '$id'";
+			var_dump($sql);
+			$pdo = $this->db->prepare($sql);
+			$pdo->execute();
+			return $res->withStatus(200);
 		});
 
 		$app->delete('/recetas/delete/{id}', function ($req, $res, $args) {
-			echo "delete receta(id) & rec_ing references";
+			$id = $args['id'];
+			$sql = "DELETE FROM recetas WHERE id = '$id'";
+			var_dump($sql);
+			$pdo = $this->db->prepare($sql);
+			$pdo->execute();
+			return $res->withStatus(200);
 		});
 
 		$app->delete('/rutinas/delete/{id}', function ($req, $res, $args) {
-			echo "delete rutina(id) & rec_ing references";
+			$id = $args['id'];
+			$sql = "DELETE FROM rutinas WHERE id = '$id'";
+			var_dump($sql);
+			$pdo = $this->db->prepare($sql);
+			$pdo->execute();
+			return $res->withStatus(200);
 		});
 
 ?>

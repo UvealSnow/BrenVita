@@ -1,7 +1,7 @@
 <h1>Vlogs</h1>
 <a ui-sref="new.vlog" ng-if="token">+ Vlog</a>
-<div ng-repeat="v in data">
-	<a ui-sref="vlogs({id: v.id})"><h2>{{v.name}}</h2></a>
+<div ui-sref="vlogs({id: v.id})" ng-repeat="v in data">
+	<h2>{{v.name}}</h2>
 	<a ui-sref="authors({id: v.auth_id})">{{v.auth}}</a>
 	<p>{{v.text}}</p>
 	<img ng-src="img/vlogs/{{v.img}}" alt="{{v.img_desc}}" title="{{v.img_desc}}">

@@ -1,12 +1,12 @@
 <h1>Artículos</h1>
 <a ui-sref="new.article" ng-if="token">+ Artículo</a>
-<div ng-repeat="a in data">
-	<a ng-href="#/articulos/{{a.id}}"><h2>{{a.name}}</h2></a>
-	<a ng-href="#/authors/{{a.auth_id}}"><h4>{{a.auth}}</h4></a>
-	<p>{{a.text}}</p>
+<div ui-sref="articles({id: a.id})" ng-repeat="a in data">
+	<h2>{{a.name}}</h2>
+	<h4>{{a.auth}}</h4>
+	<p ng-bind-html="a.text"></p>
 	<img ng-src="img/articles/{{a.img}}" alt="{{a.img_desc}}" title="{{a.img_desc}}">
 	<div ng-controller="navCtrl" ng-if="token">
 		<a ui-sref="edit.article({id: a.id})">Modificar</a>
-		<a ui-sref="delete.article({id: a.id})">Borrar</a>
+		<a ng-click="alert(a.id)" ui-sref="delete.article({id: a.id})">Borrar</a>
 	</div>
 </div>
